@@ -1,12 +1,11 @@
-// StockChart.js (updated)
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
 
 const StockChart = ({ data, stockInfo }) => {
-  // Add stockInfo prop
   const chartRef = useRef(null);
+  const [chartType, setChartType] = useState("line");
 
   useEffect(() => {
     if (!data || !data.dates || !data.values) return;
@@ -15,7 +14,9 @@ const StockChart = ({ data, stockInfo }) => {
 
     const options = {
       title: {
-        text: "Stock Price Chart",
+        text: `${
+          chartType === "line" ? `${stockInfo?.["Meta Data"]?.["2. Symbol"]} Line` : `${stockInfo?.["Meta Data"]?.["2. Symbol"]} Bar`
+        } Chart`,
         left: "center",
       },
       tooltip: {
@@ -29,17 +30,25 @@ const StockChart = ({ data, stockInfo }) => {
       yAxis: {
         type: "value",
         axisLabel: {
-          formatter: "$ {value}",
+          formatter: (value) => `$ ${value}`, // Add the dollar sign here
         },
+
       },
       series: [
         {
           data: data.values,
-          type: "line",
-          smooth: true,
-          areaStyle: {},
+          type: chartType,
+          smooth: chartType === "line",
+          areaStyle: chartType === "line" ? {} : null,
         },
       ],
+      tooltip: {
+        trigger: "axis",
+        formatter: (params) => {  // Use the formatter function
+          return `Value: <strong>$${params[0].value}</strong> <br/> Date: <strong>${params[0].axisValue}</strong>`; // Format with dollar sign
+        },
+
+      },
     };
 
     chartInstance.setOption(options);
@@ -47,7 +56,11 @@ const StockChart = ({ data, stockInfo }) => {
     return () => {
       chartInstance.dispose();
     };
-  }, [data]);
+  }, [data, stockInfo, chartType]);
+
+  const handleChartTypeChange = (type) => {
+    setChartType(type);
+  };
 
   return (
     <div>
@@ -65,7 +78,7 @@ const StockChart = ({ data, stockInfo }) => {
             <strong
               style={{
                 color: "#0070f3",
-                marginLeft:'.3rem'
+                marginLeft: ".3rem",
               }}
             >
               {stockInfo?.["Meta Data"]?.["2. Symbol"]}
@@ -76,7 +89,7 @@ const StockChart = ({ data, stockInfo }) => {
             <strong
               style={{
                 color: "#0070f3",
-                marginLeft:'.3rem'
+                marginLeft: ".3rem",
               }}
             >
               {stockInfo?.["Meta Data"]?.["3. Last Refreshed"]}
@@ -87,7 +100,7 @@ const StockChart = ({ data, stockInfo }) => {
             <strong
               style={{
                 color: "#0070f3",
-                marginLeft:'.3rem'
+                marginLeft: ".3rem",
               }}
             >
               {stockInfo?.["Meta Data"]?.["5. Time Zone"]}
@@ -95,6 +108,10 @@ const StockChart = ({ data, stockInfo }) => {
           </p>
         </div>
       )}
+      <div style={{ marginBottom: "10px" }}>
+        <button onClick={() => handleChartTypeChange("line")}>Line</button>
+        <button onClick={() => handleChartTypeChange("bar")}>Bar</button>
+      </div>
 
       <div
         ref={chartRef}

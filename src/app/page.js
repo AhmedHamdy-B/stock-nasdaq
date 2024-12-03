@@ -77,7 +77,7 @@ export default function StockPage() {
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "4rem" , marginTop: "2rem" }}>ThndrX Nasdaq Stock Market App</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "1rem" , marginTop: ".5rem" }}>ThndrX Nasdaq Stock Market App</h1>
 
       <StockSearchBar onSearch={handleSearch} nasdaqData={nasdaqData} /> {/* Pass nasdaqData as a prop */}
       <StockChart data={chartData} stockInfo={stockInfo}/>
