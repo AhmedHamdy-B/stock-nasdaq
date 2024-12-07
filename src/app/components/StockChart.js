@@ -14,9 +14,14 @@ const StockChart = ({ data, stockInfo }) => {
 
     const options = {
       title: {
-        text: `${
-          chartType === "line" ? `${stockInfo?.["Meta Data"]?.["2. Symbol"]} Line` : `${stockInfo?.["Meta Data"]?.["2. Symbol"]} Bar`
-        } Chart`,
+        title: {
+          text: `${
+            chartType === "line"
+              ? `${stockInfo?.symbol} Line`
+              : `${stockInfo?.symbol} Bar`
+          } Chart`, // Use correct key: symbol
+        },
+
         left: "center",
       },
       tooltip: {
@@ -32,7 +37,6 @@ const StockChart = ({ data, stockInfo }) => {
         axisLabel: {
           formatter: (value) => `$ ${value}`, // Add the dollar sign here
         },
-
       },
       series: [
         {
@@ -44,10 +48,10 @@ const StockChart = ({ data, stockInfo }) => {
       ],
       tooltip: {
         trigger: "axis",
-        formatter: (params) => {  // Use the formatter function
+        formatter: (params) => {
+          // Use the formatter function
           return `Value: <strong>$${params[0].value}</strong> <br/> Date: <strong>${params[0].axisValue}</strong>`; // Format with dollar sign
         },
-
       },
     };
 
@@ -81,7 +85,7 @@ const StockChart = ({ data, stockInfo }) => {
                 marginLeft: ".3rem",
               }}
             >
-              {stockInfo?.["Meta Data"]?.["2. Symbol"]}
+              {stockInfo?.symbol} {/* Access symbol directly */}
             </strong>
           </p>
           <p>
@@ -92,18 +96,18 @@ const StockChart = ({ data, stockInfo }) => {
                 marginLeft: ".3rem",
               }}
             >
-              {stockInfo?.["Meta Data"]?.["3. Last Refreshed"]}
+              {/* {stockInfo?.["Meta Data"]?.["3. Last Refreshed"]} */}
             </strong>
           </p>
           <p>
-            <strong>Time Zone :</strong>{" "}
+            <strong> Last Trade Price: </strong>{" "}
             <strong
               style={{
                 color: "#0070f3",
                 marginLeft: ".3rem",
               }}
             >
-              {stockInfo?.["Meta Data"]?.["5. Time Zone"]}
+              {stockInfo?.lastTradePrice}
             </strong>
           </p>
         </div>

@@ -1,3 +1,4 @@
+// page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,79 +9,94 @@ const StockChart = dynamic(() => import("./components/StockChart"), {
   ssr: false,
 });
 
-
-
 export default function StockPage() {
   const [chartData, setChartData] = useState(null);
   const [nasdaqData, setNasdaqData] = useState([]);
-  const [stockInfo, setStockInfo] = useState([]);
-  
-  const [filteredStocks, setFilteredStocks] = useState([]);
-
 
   useEffect(() => {
     const fetchNasdaqStocks = async () => {
       try {
         const response = await axios.get(
-          "https://financialmodelingprep.com/api/v3/nasdaq_constituent",
-          {
-            params: { apikey: 'C1wB6SQf1n0ZQlUC8Oh8dWuPOrRAxutt' }, // Replace with your FMP API key - REQUIRED
-          }
+          "https://api.polygon.io/v3/reference/tickers/types?market=stocks&exchange=NASDAQ&active=true&apiKey=xGelxFiUdtyp5btD_AxmljEY5eQobytq"
         );
-
-        // Transform FMP's response data to match your format: [{ symbol: ..., companyName: ... }, ...]
-        const formattedData = response.data.map((item) => ({
-          symbol: item.symbol,
-          companyName: item.name,
-        }));
-
-
-        setNasdaqData(formattedData);
-        setFilteredStocks(formattedData);
+        if (response.data.results) {
+          response.data.results.forEach((element) => {
+            console.log(element);
+          });
+          const formattedData = response.data.results.map((item) => ({
+            symbol: item.code, // Correct field: ticker
+            companyName: item.description,
+          }));
+          setNasdaqData(formattedData);
+        } else {
+          console.error("No Nasdaq results found:", response.data);
+          alert("Failed to fetch Nasdaq data.");
+        }
       } catch (error) {
         console.error("Error fetching Nasdaq data:", error);
-        alert("Failed to fetch Nasdaq data."); // Alert the user about the error
+        alert("Failed to fetch Nasdaq data.");
       }
     };
 
     fetchNasdaqStocks();
   }, []);
 
-
-
   const handleSearch = async (symbol) => {
     try {
-      const response = await axios.get(`https://www.alphavantage.co/query`, {
-        params: {
-          function: "TIME_SERIES_DAILY",
-          symbol,
-          apikey: "YOUR_API_KEY", // Replace with your Alpha Vantage API key
-        },
-      });
-      setStockInfo(response.data);
-      const timeSeries = response.data["Time Series (Daily)"];
-      if (timeSeries) {
-        const dates = Object.keys(timeSeries).reverse();
-        const values = dates.map((date) =>
-          parseFloat(timeSeries[date]["4. close"])
+      const aggregatesResponse = await axios.get(
+        `https://api.polygon.io/v1/open-close/${symbol}/2024-07-26?apiKey=xGelxFiUdtyp5btD_AxmljEY5eQobytq`
+      );
+
+      // const lastTradeResponse = await axios.get(
+      //   `https://api.polygon.io/v2/last/trade/${symbol}`,
+      //   {
+      //     params: {
+      //       apiKey: "xGelxFiUdtyp5btD_AxmljEY5eQobytq",
+      //     },
+      //   }
+      // );
+
+      if (aggregatesResponse.data.resultsCount > 0) {
+        const results = aggregatesResponse.data.results;
+        const dates = results.map((result) =>
+          new Date(result.t).toLocaleDateString()
         );
+        const values = results.map((result) => result.c);
+
+        // const lastTradePrice = lastTradeResponse.data.results.p;
+
         setChartData({ dates, values });
+        // setStockInfo({
+        //   symbol: symbol, // Include symbol directly
+        //   lastTradePrice,
+        // });
       } else {
         setChartData(null);
+
         alert("No data found for the entered symbol.");
       }
     } catch (error) {
+
       console.error("Error fetching stock data:", error);
       alert("Failed to fetch stock data. Please try again.");
+      setChartData(null); // Clear chart data on error
     }
   };
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "1rem" , marginTop: ".5rem" }}>ThndrX Nasdaq Stock Market App</h1>
+      <h1
+        style={{
+          textAlign: "center",
+          marginBottom: "1rem",
+          marginTop: ".5rem",
+        }}
+      >
+        ThndrX Nasdaq Stock Market App
+      </h1>
 
-      <StockSearchBar onSearch={handleSearch} nasdaqData={nasdaqData} /> {/* Pass nasdaqData as a prop */}
-      <StockChart data={chartData} stockInfo={stockInfo}/>
+      <StockSearchBar onSearch={handleSearch} nasdaqData={nasdaqData} />
+      <StockChart data={chartData} />
     </div>
   );
 }

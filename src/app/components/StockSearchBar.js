@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from "react";
 
 const StockSearchBar = ({ onSearch, nasdaqData }) => {
-  // Add nasdaqData prop
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredStocks, setFilteredStocks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,16 +11,25 @@ const StockSearchBar = ({ onSearch, nasdaqData }) => {
 
   useEffect(() => {
     if (nasdaqData) {
-      const filtered = nasdaqData.filter(
-        (stock) =>
-          stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          stock.companyName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredStocks(filtered);
-      setCurrentPage(1); // Reset to first page when search term changes
+      // Set filteredStocks to nasdaqData initially to show all stocks before search
+      setFilteredStocks(nasdaqData || []); // Handle potential null/undefined nasdaqData
+
+      if (searchTerm && nasdaqData) {
+        // Only filter if there is a search term AND we have data.
+        const filtered = nasdaqData.filter((stock) => {
+          const symbolMatch = stock.symbol
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase());
+          const companyMatch = stock.companyName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase());
+          return symbolMatch || companyMatch;
+        });
+        setFilteredStocks(filtered);
+        setCurrentPage(1); // Reset to page 1 after filtering
+      }
     }
   }, [searchTerm, nasdaqData]);
-
 
   const indexOfLastStock = currentPage * stocksPerPage;
   const indexOfFirstStock = indexOfLastStock - stocksPerPage;
@@ -29,7 +37,6 @@ const StockSearchBar = ({ onSearch, nasdaqData }) => {
     indexOfFirstStock,
     indexOfLastStock
   );
-
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleSearch = () => {
@@ -92,7 +99,7 @@ const StockSearchBar = ({ onSearch, nasdaqData }) => {
               border: "1px solid #ccc",
               borderRadius: "4px",
               cursor: "pointer",
-              whiteSpace: "nowrap", 
+              whiteSpace: "nowrap",
             }}
           >
             {" "}
@@ -108,12 +115,11 @@ const StockSearchBar = ({ onSearch, nasdaqData }) => {
           alignItems: "center",
         }}
       >
-        {" "}
         {Array.from({
           length: Math.ceil(filteredStocks.length / stocksPerPage),
         }).map((_, index) => (
           <button
-            key={index}
+          key={index}
             onClick={() => paginate(index + 1)}
             style={{
               margin: "0 5px",
